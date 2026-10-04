@@ -6,202 +6,153 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Elite Savaşçı Atölyesi</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#101522;color:white;font-family:Arial;text-align:center}
-header{background:#222c40;padding:18px}
-h1{font-size:23px;margin:5px}
-p{color:#c7cede}
-#viewer{height:55vh;min-height:340px;touch-action:none}
-canvas{display:block}
-.controls{padding:12px}
-button{background:#b72c39;color:white;border:0;border-radius:10px;padding:12px;margin:5px;font-size:15px}
+body {
+  margin: 0;
+  background: #101522;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+header {
+  background: #222d42;
+  padding: 20px 10px;
+}
+h1 { margin: 5px; font-size: 24px; }
+p { color: #c2c9d8; }
+#viewer {
+  width: 100%;
+  height: 58vh;
+  min-height: 350px;
+}
+.controls { padding: 15px; }
+button {
+  background: #bb293b;
+  border: 0;
+  color: white;
+  padding: 14px 18px;
+  margin: 5px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+button:active { background: #e04b5d; }
+#status { color: #ffc85a; }
 </style>
 </head>
 <body>
 <header>
-<h1>⚔️ ELİTE SAVAŞÇI</h1>
-<p>Özel asker kostümünü tasarla</p>
+  <h1>⚔️ ELİT SAVAŞÇI</h1>
+  <p>3D Asker Tasarım Atölyesi</p>
 </header>
+
 <div id="viewer"></div>
+<p id="status">Asker modeli yükleniyor...</p>
+
 <div class="controls">
-<p>🎨 Zırh rengi</p>
-<button onclick="paint(0x252b38)">Siyah</button>
-<button onclick="paint(0xb52c32)">Kırmızı</button>
-<button onclick="paint(0x1766a0)">Mavi</button>
-<button onclick="paint(0xb18a28)">Altın</button>
-<button onclick="paint(0x59664a)">Kamuflaj</button>
-<p>Parmağınla askeri döndür</p>
+  <h3>🎨 Zırh rengi</h3>
+  <button onclick="changeColor(0x20252e)">Siyah</button>
+  <button onclick="changeColor(0x9d2632)">Kırmızı</button>
+  <button onclick="changeColor(0x1763a4)">Mavi</button>
+  <button onclick="changeColor(0x9b8536)">Altın</button>
+  <p>Parmağınla sürükleyerek döndür.</p>
 </div>
 
 <script type="module">
 import * as THREE from
 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { GLTFLoader } from
+'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from
+'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
-const box=document.getElementById('viewer');
-const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x101522);
+const container = document.getElementById('viewer');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x101522);
 
-const camera=new THREE.PerspectiveCamera(
-45,box.clientWidth/box.clientHeight,0.1,100);
-camera.position.set(0,1.8,7.5);
-camera.lookAt(0,1.5,0);
-
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(box.clientWidth,box.clientHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-box.appendChild(renderer.domElement);
-
-scene.add(new THREE.HemisphereLight(0xffffff,0x343b55,2));
-const sun=new THREE.DirectionalLight(0xffffff,2.5);
-sun.position.set(3,6,5);
-scene.add(sun);
-
-const soldier=new THREE.Group();
-scene.add(soldier);
-
-const armor=new THREE.MeshStandardMaterial({color:0x252b38,metalness:.5,roughness:.4});
-const accent=new THREE.MeshStandardMaterial({color:0xb52c32,metalness:.4,roughness:.4});
-const fabric=new THREE.MeshStandardMaterial({color:0x303744,roughness:.9});
-const skin=new THREE.MeshStandardMaterial({color:0x9b765d});
-const black=new THREE.MeshStandardMaterial({color:0x11151d,roughness:.65});
-const visor=new THREE.MeshStandardMaterial({color:0x19c9e9,emissive:0x087b9a,emissiveIntensity:1});
-const metal=new THREE.MeshStandardMaterial({color:0x858d99,metalness:.8,roughness:.3});
-
-function ball(x,y,z,sx,sy,sz,mat,parent=soldier){
- const m=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),mat);
- m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m;
-}
-function cyl(x,y,z,rt,rb,h,mat,parent=soldier){
- const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,12),mat);
- m.position.set(x,y,z);parent.add(m);return m;
-}
-function cube(x,y,z,sx,sy,sz,mat,parent=soldier){
- const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);
- m.position.set(x,y,z);parent.add(m);return m;
-}
-
-// Gövde
-cyl(0,1.76,0,.47,.37,.95,armor);
-ball(0,1.85,.16,.47,.43,.30,armor);
-cube(0,1.83,.39,.65,.64,.12,fabric);
-
-// Göğüs plakası ve çizgileri
-cube(0,1.93,.47,.48,.34,.09,accent);
-cube(0,1.93,.53,.34,.19,.04,black);
-for(const side of [-1,1]){
- // Göğüs cepleri
- for(let i=0;i<2;i++){
-  cube(side*.29,1.75+i*.20,.43,.17,.15,.12,black);
-  cube(side*.29,1.83+i*.20,.50,.12,.025,.025,metal);
- }
- // Omuz zırhları
- ball(side*.57,2.08,0,.29,.25,.29,armor);
- ball(side*.58,2.10,.17,.19,.17,.16,accent);
- // Kollar
- cyl(side*.64,1.73,0,.17,.20,.55,fabric);
- ball(side*.64,1.45,0,.18,.17,.18,armor);
- cyl(side*.64,1.19,0,.14,.16,.38,armor);
- // Dirsek koruması
- ball(side*.64,1.43,.12,.18,.13,.10,accent);
- // Eldiven
- ball(side*.64,.94,.02,.16,.15,.16,black);
- for(let j=0;j<3;j++){
-  cube(side*.64+(j-1)*.055,.91,.16,.035,.12,.035,metal);
- }
-}
-
-// Boyun ve kafa
-cyl(0,2.35,0,.15,.15,.20,skin);
-ball(0,2.61,0,.29,.34,.27,skin);
-
-// Kask
-ball(0,2.82,0,.36,.29,.34,armor);
-ball(0,2.69,.21,.30,.12,.17,black);
-cube(0,2.68,.34,.39,.055,.035,visor);
-cube(0,2.99,.05,.48,.055,.20,accent);
-// Kask kulaklıkları
-for(const s of [-1,1]){
- ball(s*.34,2.70,0,.09,.16,.13,black);
- ball(s*.37,2.70,.06,.06,.08,.08,metal);
-}
-
-// Bel kemeri
-cyl(0,1.19,0,.39,.37,.22,black);
-cube(0,1.19,.36,.20,.17,.07,metal);
-
-// Bel cepleri
-for(const s of [-1,1]){
- cube(s*.28,1.18,.26,.17,.20,.13,armor);
- cube(s*.28,1.18,.34,.12,.035,.025,accent);
-}
-
-// Bacaklar
-for(const s of [-1,1]){
- cyl(s*.22,.73,0,.20,.22,.65,fabric);
- // Uyluk cepleri
- cube(s*.23,.79,.19,.25,.27,.10,armor);
- cube(s*.23,.79,.25,.17,.12,.035,accent);
- // Dizlik
- ball(s*.22,.43,.17,.21,.18,.12,armor);
- cube(s*.22,.43,.27,.19,.08,.035,metal);
- // Botlar
- cyl(s*.22,.19,0,.16,.18,.35,black);
- ball(s*.22,.07,.13,.19,.10,.28,armor);
-}
-
-// Sırt çantası
-cube(0,1.82,-.38,.57,.72,.27,black);
-cube(0,2.03,-.54,.39,.29,.10,armor);
-cube(0,1.63,-.54,.39,.20,.10,accent);
-for(const s of [-1,1]){
- cube(s*.38,1.80,-.38,.16,.39,.20,armor);
-}
-// Çanta kayışları
-for(const s of [-1,1]){
- const strap=cube(s*.23,1.86,.29,.08,.70,.045,accent);
- strap.rotation.z=s*.13;
-}
-
-// Zemin
-const floor=new THREE.Mesh(
- new THREE.CircleGeometry(2,48),
- new THREE.MeshStandardMaterial({color:0x252d40,roughness:.9})
+const camera = new THREE.PerspectiveCamera(
+  45, container.clientWidth / container.clientHeight, 0.1, 100
 );
-floor.rotation.x=-Math.PI/2;
-floor.position.y=-.04;
+camera.position.set(0, 2, 5);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+container.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x39445b, 2));
+
+const light = new THREE.DirectionalLight(0xffffff, 3);
+light.position.set(3, 6, 5);
+scene.add(light);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.target.set(0, 1, 0);
+controls.minDistance = 2;
+controls.maxDistance = 8;
+
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(2.5, 64),
+  new THREE.MeshStandardMaterial({color:0x30394c})
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -0.03;
 scene.add(floor);
 
-// Renk değiştirme
-window.paint=(color)=>{
- armor.color.setHex(color);
- accent.color.setHex(color);
+let soldier = null;
+
+const loader = new GLTFLoader();
+loader.load(
+  'https://threejs.org/examples/models/gltf/Soldier.glb',
+  (gltf) => {
+    soldier = gltf.scene;
+    const box = new THREE.Box3().setFromObject(soldier);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+
+    soldier.position.x -= center.x;
+    soldier.position.z -= center.z;
+    soldier.position.y -= box.min.y;
+
+    const scale = 2.8 / size.y;
+    soldier.scale.setScalar(scale);
+
+    scene.add(soldier);
+    controls.target.set(0, 1.3, 0);
+    document.getElementById('status').textContent =
+      'Asker hazır! Kostümünü tasarla.';
+  },
+  undefined,
+  (error) => {
+    document.getElementById('status').textContent =
+      'Model yüklenemedi. İnternet bağlantını kontrol et.';
+    console.error(error);
+  }
+);
+
+window.changeColor = (color) => {
+  if (!soldier) return;
+  soldier.traverse((obj) => {
+    if (!obj.isMesh || !obj.material) return;
+    const mats = Array.isArray(obj.material)
+      ? obj.material : [obj.material];
+    mats.forEach((mat) => {
+      if (mat.color) mat.color.setHex(color);
+    });
+  });
 };
 
-// Dokunarak döndürme
-let down=false,last=0;
-renderer.domElement.addEventListener('pointerdown',e=>{
- down=true;last=e.clientX;
- renderer.domElement.setPointerCapture(e.pointerId);
-});
-renderer.domElement.addEventListener('pointermove',e=>{
- if(!down)return;
- soldier.rotation.y+=(e.clientX-last)*.012;
- last=e.clientX;
-});
-renderer.domElement.addEventListener('pointerup',()=>down=false);
-renderer.domElement.addEventListener('pointercancel',()=>down=false);
-
-function animate(){
- requestAnimationFrame(animate);
- renderer.render(scene,camera);
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
 }
 animate();
 
-window.addEventListener('resize',()=>{
- const w=box.clientWidth,h=box.clientHeight;
- camera.aspect=w/h;
- camera.updateProjectionMatrix();
- renderer.setSize(w,h);
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
 });
 </script>
 </body>
