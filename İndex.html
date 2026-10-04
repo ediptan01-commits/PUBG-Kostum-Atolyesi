@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Kostüm Atölyesi</title>
+<style>
+body {
+  margin: 0;
+  background: #151923;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+header { padding: 18px; background: #242b39; }
+h1 { font-size: 23px; }
+#viewer { width: 100%; height: 65vh; }
+p { color: #bbb; }
+</style>
+</head>
+<body>
+<header>
+  <h1>⚔️ 3D Kostüm Atölyesi</h1>
+  <p>Kendi savaşçı karakterimizi tasarlıyoruz</p>
+</header>
+
+<div id="viewer"></div>
+<p>3D karakter sahnemiz hazır!</p>
+
+<script type="module">
+import * as THREE from
+'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const container = document.getElementById('viewer');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x151923);
+
+const camera = new THREE.PerspectiveCamera(
+  60, container.clientWidth / container.clientHeight, 0.1, 100
+);
+camera.position.set(0, 1.5, 5);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 2));
+
+const light = new THREE.DirectionalLight(0xffffff, 2);
+light.position.set(3, 5, 5);
+scene.add(light);
+
+// Geçici savaşçı modeli
+const material = new THREE.MeshStandardMaterial({
+  color: 0x252b38,
+  metalness: 0.6,
+  roughness: 0.4
+});
+
+const body = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.48, 0.6, 1.5, 8),
+  material
+);
+body.position.y = 1.35;
+scene.add(body);
+
+const head = new THREE.Mesh(
+  new THREE.SphereGeometry(0.38, 16, 16),
+  new THREE.MeshStandardMaterial({color:0x9b765d})
+);
+head.position.y = 2.35;
+scene.add(head);
+
+const helmet = new THREE.Mesh(
+  new THREE.SphereGeometry(0.42, 16, 12, 0, Math.PI*2, 0, Math.PI/2),
+  new THREE.MeshStandardMaterial({color:0xb52c32, metalness:0.7})
+);
+helmet.position.y = 2.42;
+scene.add(helmet);
+
+function animate() {
+  requestAnimationFrame(animate);
+  body.rotation.y += 0.005;
+  head.rotation.y += 0.005;
+  helmet.rotation.y += 0.005;
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+</script>
+</body>
+</html>
