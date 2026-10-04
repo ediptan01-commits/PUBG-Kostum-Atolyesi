@@ -3,95 +3,187 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Kostüm Atölyesi</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Savaşçı Kostüm Atölyesi</title>
 <style>
-body {
-  margin: 0;
-  background: #151923;
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
+*{box-sizing:border-box}
+body{
+ margin:0;background:#111522;color:white;
+ font-family:Arial,sans-serif;text-align:center
 }
-header { padding: 18px; background: #242b39; }
-h1 { font-size: 23px; }
-#viewer { width: 100%; height: 65vh; }
-p { color: #bbb; }
+header{padding:18px;background:#222b40}
+h1{font-size:23px;margin:4px}
+p{color:#c5ccda}
+#viewer{height:60vh;min-height:350px;touch-action:none}
+canvas{display:block}
+.controls{padding:12px}
+button{
+ background:#c52e39;color:white;border:0;
+ padding:13px 18px;border-radius:10px;
+ font-size:15px;margin:5px
+}
 </style>
 </head>
 <body>
 <header>
-  <h1>⚔️ 3D Kostüm Atölyesi</h1>
-  <p>Kendi savaşçı karakterimizi tasarlıyoruz</p>
+<h1>⚔️ SAVAŞÇI ATÖLYESİ</h1>
+<p>Özel zırhını tasarla</p>
 </header>
 
 <div id="viewer"></div>
-<p>3D karakter sahnemiz hazır!</p>
+
+<div class="controls">
+<p>🎨 Zırh rengini seç</p>
+<button onclick="changeColor(0x252b38)">Siyah</button>
+<button onclick="changeColor(0xb52c32)">Kırmızı</button>
+<button onclick="changeColor(0x1766a0)">Mavi</button>
+<button onclick="changeColor(0xb18a28)">Altın</button>
+<p>Parmağınla karakteri döndürebilirsin.</p>
+</div>
 
 <script type="module">
 import * as THREE from
 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
-const container = document.getElementById('viewer');
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x151923);
+const container=document.getElementById('viewer');
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x111522);
 
-const camera = new THREE.PerspectiveCamera(
-  60, container.clientWidth / container.clientHeight, 0.1, 100
+const camera=new THREE.PerspectiveCamera(
+ 45,container.clientWidth/container.clientHeight,0.1,100
 );
-camera.position.set(0, 1.5, 5);
+camera.position.set(0,1.8,7.5);
+camera.lookAt(0,1.5,0);
 
-const renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(container.clientWidth, container.clientHeight);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(container.clientWidth,container.clientHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 container.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, 2));
-
-const light = new THREE.DirectionalLight(0xffffff, 2);
-light.position.set(3, 5, 5);
+scene.add(new THREE.HemisphereLight(0xffffff,0x343b55,2));
+const light=new THREE.DirectionalLight(0xffffff,2.5);
+light.position.set(3,6,5);
 scene.add(light);
 
-// Geçici savaşçı modeli
-const material = new THREE.MeshStandardMaterial({
-  color: 0x252b38,
-  metalness: 0.6,
-  roughness: 0.4
+const warrior=new THREE.Group();
+scene.add(warrior);
+
+const armor=new THREE.MeshStandardMaterial({
+ color:0x252b38,metalness:0.65,roughness:0.35
+});
+const red=new THREE.MeshStandardMaterial({
+ color:0xb52c32,metalness:0.55,roughness:0.3
+});
+const skin=new THREE.MeshStandardMaterial({color:0x9b765d});
+const dark=new THREE.MeshStandardMaterial({color:0x151820});
+const glow=new THREE.MeshStandardMaterial({
+ color:0x29c7e8,emissive:0x087b9a,
+ emissiveIntensity:1.2
 });
 
-const body = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.48, 0.6, 1.5, 8),
-  material
-);
-body.position.y = 1.35;
-scene.add(body);
+function sphere(parent,x,y,z,sx,sy,sz,mat){
+ const m=new THREE.Mesh(
+  new THREE.SphereGeometry(1,16,12),mat
+ );
+ m.position.set(x,y,z);
+ m.scale.set(sx,sy,sz);
+ parent.add(m);
+ return m;
+}
+function cylinder(parent,x,y,z,rt,rb,h,mat){
+ const m=new THREE.Mesh(
+  new THREE.CylinderGeometry(rt,rb,h,12),mat
+ );
+ m.position.set(x,y,z);
+ parent.add(m);
+ return m;
+}
 
-const head = new THREE.Mesh(
-  new THREE.SphereGeometry(0.38, 16, 16),
-  new THREE.MeshStandardMaterial({color:0x9b765d})
-);
-head.position.y = 2.35;
-scene.add(head);
+// Gövde ve göğüs zırhı
+cylinder(warrior,0,1.75,0,0.49,0.38,0.95,armor);
+sphere(warrior,0,1.88,0.12,0.48,0.42,0.30,red);
+sphere(warrior,0,1.9,0.29,0.27,0.23,0.12,dark);
+sphere(warrior,0,1.9,0.39,0.10,0.07,0.035,glow);
 
-const helmet = new THREE.Mesh(
-  new THREE.SphereGeometry(0.42, 16, 12, 0, Math.PI*2, 0, Math.PI/2),
-  new THREE.MeshStandardMaterial({color:0xb52c32, metalness:0.7})
-);
-helmet.position.y = 2.42;
-scene.add(helmet);
+// Boyun ve kafa
+cylinder(warrior,0,2.35,0,0.16,0.16,0.22,skin);
+sphere(warrior,0,2.65,0,0.30,0.37,0.28,skin);
 
-function animate() {
-  requestAnimationFrame(animate);
-  body.rotation.y += 0.005;
-  head.rotation.y += 0.005;
-  helmet.rotation.y += 0.005;
-  renderer.render(scene, camera);
+// Kask
+sphere(warrior,0,2.83,0,0.35,0.29,0.33,red);
+sphere(warrior,0,2.67,0.23,0.29,0.10,0.12,dark);
+sphere(warrior,0,2.68,0.34,0.20,0.035,0.025,glow);
+
+// Omuzlar ve kollar
+for(const side of [-1,1]){
+ sphere(warrior,side*0.58,2.08,0,0.27,0.25,0.27,red);
+ cylinder(warrior,side*0.64,1.73,0,0.17,0.20,0.56,armor);
+ sphere(warrior,side*0.64,1.42,0,0.17,0.17,0.17,dark);
+ cylinder(warrior,side*0.64,1.17,0,0.12,0.15,0.38,red);
+ sphere(warrior,side*0.64,0.94,0,0.14,0.13,0.15,dark);
+}
+
+// Bel
+cylinder(warrior,0,1.15,0,0.38,0.36,0.25,dark);
+sphere(warrior,0,1.15,0.34,0.12,0.10,0.07,red);
+
+// Bacaklar ve botlar
+for(const side of [-1,1]){
+ cylinder(warrior,side*0.22,0.73,0,0.20,0.23,0.68,armor);
+ sphere(warrior,side*0.22,0.43,0,0.21,0.19,0.21,red);
+ cylinder(warrior,side*0.22,0.20,0.04,0.17,0.18,0.38,dark);
+ sphere(warrior,side*0.22,0.07,0.13,0.20,0.10,0.30,armor);
+}
+
+// Sırt çantası
+const pack=new THREE.Mesh(
+ new THREE.BoxGeometry(0.55,0.72,0.25),dark
+);
+pack.position.set(0,1.85,-0.38);
+warrior.add(pack);
+sphere(warrior,0,2.05,-0.53,0.22,0.20,0.06,red);
+
+// Zemin
+const floor=new THREE.Mesh(
+ new THREE.CircleGeometry(2,48),
+ new THREE.MeshStandardMaterial({
+  color:0x252c3d,roughness:0.8
+ })
+);
+floor.rotation.x=-Math.PI/2;
+floor.position.y=-0.04;
+scene.add(floor);
+
+// Parmağınla döndürme
+let dragging=false,lastX=0;
+renderer.domElement.addEventListener('pointerdown',e=>{
+ dragging=true;lastX=e.clientX;
+ renderer.domElement.setPointerCapture(e.pointerId);
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+ if(!dragging)return;
+ warrior.rotation.y+=(e.clientX-lastX)*0.012;
+ lastX=e.clientX;
+});
+renderer.domElement.addEventListener('pointerup',()=>dragging=false);
+renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
+
+window.changeColor=(color)=>{
+ armor.color.setHex(color);
+ red.color.setHex(color);
+};
+
+function animate(){
+ requestAnimationFrame(animate);
+ renderer.render(scene,camera);
 }
 animate();
 
-window.addEventListener('resize', () => {
-  camera.aspect = container.clientWidth / container.clientHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(container.clientWidth, container.clientHeight);
+window.addEventListener('resize',()=>{
+ const w=container.clientWidth,h=container.clientHeight;
+ camera.aspect=w/h;
+ camera.updateProjectionMatrix();
+ renderer.setSize(w,h);
 });
 </script>
 </body>
